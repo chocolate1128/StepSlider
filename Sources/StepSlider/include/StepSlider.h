@@ -94,10 +94,19 @@ IB_DESIGNABLE
 @property (nonatomic, strong) UIFont *labelFont;
 
 /**
+ *  Selected index labelFont.
+ */
+@property (nonatomic, strong, nullable) UIFont *selectLabelFont;
+
+/**
  *  Color of dot labels.
  */
 @property (nonatomic, strong) IBInspectable UIColor *labelColor;
 
+/**
+ *  Color of selected labels.
+ */
+@property (nonatomic, strong, nullable) IBInspectable UIColor *selectedLabelColor;
 /**
  *  Offset between slider and labels.
  */

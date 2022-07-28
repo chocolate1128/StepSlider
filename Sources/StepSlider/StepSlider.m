@@ -187,7 +187,7 @@ void withoutCAAnimation(withoutAnimationBlock code)
 
     if (self.sliderCircleImage) {
         _sliderCircleLayer.path     = NULL;
-        _sliderCircleLayer.frame    = CGRectMake(0.f, 0.f, fmaxf(self.sliderCircleImage.size.width, 44.f), fmaxf(self.sliderCircleImage.size.height, 44.f));
+        _sliderCircleLayer.frame    = CGRectMake(0.f, 0.f, self.sliderCircleImage.size.width, self.sliderCircleImage.size.height);
         _sliderCircleLayer.contents = (__bridge id)self.sliderCircleImage.CGImage;
         _sliderCircleLayer.contentsGravity = kCAGravityCenter;
     } else {
@@ -208,13 +208,17 @@ void withoutCAAnimation(withoutAnimationBlock code)
         [_sliderCircleLayer addAnimation:basicSliderAnimation forKey:@"position"];
     }
     
+    
     _trackLayer.frame = CGRectMake(contentFrame.origin.x,
                                    CGRectGetMidY(contentFrame) - self.trackHeight / 2.f,
                                    contentFrame.size.width,
                                    self.trackHeight);
+    
     _trackLayer.path            = [self fillingPath];
     _trackLayer.backgroundColor = [self.trackColor CGColor];
     _trackLayer.fillColor       = [self.tintColor CGColor];
+    _trackLayer.cornerRadius = self.trackHeight / 2.0;
+    _trackLayer.masksToBounds = YES;
     
     if (animated) {
         CABasicAnimation *basicTrackAnimation = [CABasicAnimation animationWithKeyPath:@"path"];
@@ -237,6 +241,10 @@ void withoutCAAnimation(withoutAnimationBlock code)
     }
     NSTimeInterval animationTime = left ? animationTimeDiff : [CATransaction animationDuration] + animationTimeDiff;
     CGFloat circleAnimation      = circleFrameSide / _trackLayer.frame.size.width;
+    
+    if (!_selectedLabelColor) {
+        _selectedLabelColor = _labelColor;
+    }
     
     for (NSUInteger i = 0; i < self.maxCount; i++) {
         CAShapeLayer *trackCircle;
@@ -271,7 +279,12 @@ void withoutCAAnimation(withoutAnimationBlock code)
         }
 
         trackLabel.position        = CGPointMake(contentFrame.origin.x + stepWidth * i, labelsY);
-        trackLabel.foregroundColor = self.labelColor.CGColor;
+        if (_index == i) {
+            trackLabel.foregroundColor = self.selectedLabelColor.CGColor;
+        } else {
+            trackLabel.foregroundColor = self.labelColor.CGColor;
+        }
+        
         
         if (animated) {
             if (trackCircleImage) {
@@ -561,6 +574,10 @@ void withoutCAAnimation(withoutAnimationBlock code)
 
 - (CATextLayer *)textLayerWithSize:(CGSize)size index:(NSUInteger)index
 {
+    if (!_selectLabelFont) {
+        _selectLabelFont = _labelFont;
+    }
+    
     if (index >= _trackLabelsArray.count) {
         CATextLayer *trackLabel = [CATextLayer layer];
         
@@ -584,11 +601,19 @@ void withoutCAAnimation(withoutAnimationBlock code)
         trackLabel.contentsScale = [UIScreen mainScreen].scale;
         trackLabel.anchorPoint   = anchorPoint;
         
-        CFStringRef fontName = (__bridge CFStringRef)self.labelFont.fontName;
+        CFStringRef fontName;
+        CGFloat pointSize;
+        if (index == _index) {
+            fontName = (__bridge CFStringRef)self.selectLabelFont.fontName;
+            pointSize = self.selectLabelFont.pointSize;
+        } else {
+            fontName = (__bridge CFStringRef)self.labelFont.fontName;
+            pointSize = self.labelFont.pointSize;
+        }
         CGFontRef fontRef    = CGFontCreateWithFontName(fontName);
         
         trackLabel.font     = fontRef;
-        trackLabel.fontSize = self.labelFont.pointSize;
+        trackLabel.fontSize = pointSize;
         CGFontRelease(fontRef);
         
         trackLabel.string = self.labels[index];
@@ -599,7 +624,22 @@ void withoutCAAnimation(withoutAnimationBlock code)
         
         return trackLabel;
     } else {
-        return _trackLabelsArray[index];
+        CATextLayer *trackLabel = _trackLabelsArray[index];
+        CFStringRef fontName;
+        CGFloat pointSize;
+        if (index == _index) {
+            fontName = (__bridge CFStringRef)self.selectLabelFont.fontName;
+            pointSize = self.selectLabelFont.pointSize;
+        } else {
+            fontName = (__bridge CFStringRef)self.labelFont.fontName;
+            pointSize = self.labelFont.pointSize;
+        }
+        CGFontRef fontRef    = CGFontCreateWithFontName(fontName);
+        
+        trackLabel.font     = fontRef;
+        trackLabel.fontSize = pointSize;
+        CGFontRelease(fontRef);
+        return trackLabel;
     }
 }
 
